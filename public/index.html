@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wedding Registry - Agung & Rona</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#E6B7C6',
+                        'primary-dark': '#D9A3B2',
+                        'accent-blue': '#BFD6E6',
+                        'accent-yellow': '#F3E6A1',
+                        'bg-cream': '#F6F1EC',
+                        'accent-green': '#B8C888',
+                        'text-dark': '#2A2A2A',
+                        'text-muted': '#666666',
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        serif: ['"Cormorant Garamond"', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-bg-cream text-text-dark font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Hero Section -->
+    <header class="text-center pt-20 pb-10 bg-gradient-to-b from-white to-bg-cream px-4">
+        <h1 class="font-serif text-5xl md:text-6xl text-primary-dark mb-4 tracking-tight">
+            Agung <span class="italic font-normal text-text-dark">&</span> Rona
+        </h1>
+        <p class="text-text-muted text-lg max-w-lg mx-auto leading-relaxed px-4">
+            Kehadiranmu adalah hadiah terindah. Namun jika ingin memberi tanda kasih, ini adalah beberapa hal kecil yang kami butuhkan.
+        </p>
+        <div class="inline-block mt-6 px-5 py-2 bg-white border border-primary rounded-full text-primary-dark font-medium tracking-wide shadow-sm">
+            26 Juli 2026
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 pb-20 max-w-6xl flex-grow">
+        
+        <!-- Filter Buttons -->
+        <div class="flex flex-wrap justify-center gap-3 mb-10" id="filter-container">
+            <button class="filter-btn px-5 py-2 rounded-full border border-transparent text-sm font-medium transition-all duration-300 hover:bg-white hover:shadow-sm text-text-muted hover:text-text-dark" data-category="Semua">
+                Semua
+            </button>
+            <button class="filter-btn px-5 py-2 rounded-full border border-transparent text-sm font-medium transition-all duration-300 hover:bg-white hover:shadow-sm text-text-muted hover:text-text-dark" data-category="Rumah">
+                Rumah
+            </button>
+            <button class="filter-btn px-5 py-2 rounded-full border border-transparent text-sm font-medium transition-all duration-300 hover:bg-white hover:shadow-sm text-text-muted hover:text-text-dark" data-category="Dapur">
+                Dapur
+            </button>
+            <button class="filter-btn px-5 py-2 rounded-full border border-transparent text-sm font-medium transition-all duration-300 hover:bg-white hover:shadow-sm text-text-muted hover:text-text-dark" data-category="Elektronik">
+                Elektronik
+            </button>
+        </div>
+
+        <!-- Grid -->
+        <div id="gift-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <!-- Loading State -->
+            <div class="col-span-full text-center py-20 text-text-muted">
+                <i class="ri-loader-4-line ri-spin text-3xl mb-3 block"></i>
+                <span class="text-sm tracking-wide">Memuat daftar...</span>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-10 text-text-muted text-sm border-t border-black/5 bg-white/50">
+        <p>© 2026 Wedding Registry • Agung & Rona</p>
+    </footer>
+
+    <script>
+        const API_ENDPOINT = '/wedding-registry/api/gifts';
+        let allGifts = []; 
+
+        // Fetch Data
+        fetch(API_ENDPOINT)
+            .then(response => response.json())
+            .then(res => {
+                allGifts = res.data;
+                renderGifts('Semua'); 
+                setupFilters();
+            })
+            .catch(err => {
+                document.getElementById('gift-grid').innerHTML = `
+                    <div class="col-span-full text-center py-12 text-red-400 bg-red-50 rounded-xl">
+                        <i class="ri-error-warning-line text-2xl mb-2 block"></i>
+                        Gagal memuat data. Coba refresh halaman.
+                    </div>
+                `;
+                console.error(err);
+            });
+
+        // Setup Filter Buttons
+        function setupFilters() {
+            const buttons = document.querySelectorAll('.filter-btn');
+            
+            // Set initial active state
+            const firstBtn = buttons[0];
+            if(firstBtn) {
+                firstBtn.setAttribute('data-active', 'true');
+                firstBtn.classList.add('font-semibold', 'bg-white', 'shadow-sm', 'text-text-dark');
+            }
+
+            buttons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Update UI State
+                    buttons.forEach(b => {
+                        b.removeAttribute('data-active');
+                        b.classList.remove('font-semibold', 'bg-white', 'shadow-sm', 'text-text-dark');
+                    });
+                    
+                    btn.setAttribute('data-active', 'true');
+                    btn.classList.add('font-semibold', 'bg-white', 'shadow-sm', 'text-text-dark');
+
+                    // Filter Data
+                    const category = btn.getAttribute('data-category');
+                    renderGifts(category);
+                });
+            });
+        }
+
+        // Render Function
+        function renderGifts(filterCategory) {
+            const grid = document.getElementById('gift-grid');
+            grid.innerHTML = '';
+
+            const filtered = filterCategory === 'Semua' 
+                ? allGifts 
+                : allGifts.filter(g => {
+                    const map = { 'Rumah': 'Home', 'Dapur': 'Kitchen', 'Elektronik': 'Electronics' };
+                    const target = map[filterCategory] || filterCategory; 
+                    return (g.category || '').toLowerCase() === target.toLowerCase();
+                });
+            
+            if(filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-16 text-text-muted italic bg-white/50 rounded-2xl border border-dashed border-primary/30">
+                        Tidak ada item di kategori ini.
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(gift => {
+                const price = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(gift.price);
+                
+                // Fallback Image
+                const fallbackImage = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIiB2aWV3Qm94PSIwIDAgMzAwIDMwMCI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2Y2ZjFlYyIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iIGZpbGw9IiNiZmQ2ZTYiPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
+
+                const isPurchased = !!gift.is_purchased;
+                const card = document.createElement('div');
+                // Add opacity and grayscale if purchased
+                card.className = `group bg-white rounded-2xl overflow-hidden border border-black/5 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col relative ${isPurchased ? 'opacity-60 grayscale-[80%]' : ''}`;
+                
+                card.innerHTML = `
+                    <div class="relative pt-[100%] bg-gray-50 overflow-hidden">
+                        <span class="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wide text-text-dark z-10 shadow-sm border border-black/5">
+                            ${gift.category || 'General'}
+                        </span>
+                        
+                        <!-- Purchased Badge -->
+                        ${isPurchased ? '<span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/80 text-white px-4 py-2 rounded-lg font-bold text-sm tracking-widest z-20 border border-white/20 shadow-xl uppercase">Terbeli</span>' : ''}
+
+                        <img src="${gift.image_url}" alt="${gift.name}" 
+                            class="absolute top-0 left-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                            onerror="this.onerror=null; this.src='${fallbackImage}'">
+                    </div>
+                    <div class="p-5 flex-grow flex flex-col text-center">
+                        <h3 class="font-serif text-xl font-semibold text-text-dark mb-2 leading-tight line-clamp-2">${gift.name}</h3>
+                        <div class="text-primary-dark font-sans font-bold text-sm mb-5">${price}</div>
+                        
+                        <!-- Button Condition -->
+                        ${isPurchased 
+                            ? `<button disabled class="mt-auto inline-flex items-center justify-center gap-2 w-full py-3 bg-gray-200 text-gray-500 cursor-not-allowed rounded-xl text-sm font-medium">
+                                <i class="ri-checkbox-circle-fill"></i> Sudah Dibeli
+                               </button>`
+                            : `<a href="${gift.link_url}" target="_blank" class="mt-auto inline-flex items-center justify-center gap-2 w-full py-3 bg-text-dark text-white rounded-xl text-sm font-medium hover:bg-primary-dark transition-colors duration-200">
+                                <i class="ri-gift-line"></i> Kirim Hadiah
+                               </a>`
+                        }
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>

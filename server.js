@@ -240,6 +240,35 @@ router.post('/api/gifts', authRequired, (req, res) => {
     });
 });
 
+router.put('/api/gifts/:id', authRequired, (req, res) => {
+    const { name, category, price, image_url, link_url } = req.body;
+    
+    // Basic validation
+    if (!name || !category || !price) {
+        return res.status(400).json({ error: 'Nama, kategori, dan harga wajib diisi' });
+    }
+
+    const sql = `UPDATE gifts 
+                 SET name = ?, category = ?, price = ?, image_url = ?, link_url = ?
+                 WHERE id = ?`;
+    const params = [name, category, price, image_url, link_url, req.params.id];
+
+    db.run(sql, params, function (err) {
+        if (err) {
+            res.status(400).json({ error: err.message });
+            return;
+        }
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'Item not found' });
+        }
+        res.json({
+            message: 'success',
+            data: req.body,
+            changes: this.changes
+        });
+    });
+});
+
 router.patch('/api/gifts/:id/purchased', authRequired, (req, res) => {
     const { is_purchased } = req.body;
     const sql = 'UPDATE gifts SET is_purchased = ? WHERE id = ?';

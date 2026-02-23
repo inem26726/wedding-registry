@@ -111,8 +111,19 @@ function verifyPassword(password, savedHash) {
 }
 
 function setSessionCookie(res, token, expiresAt) {
+    // For cross-site CMS at cms.ronagung.dev we need the cookie to be
+    // available to subdomain ronagung.dev. Set Domain and SameSite=None
+    // when running in production or when a CMS origin is used.
     const expires = new Date(expiresAt).toUTCString();
-    res.setHeader('Set-Cookie', `${SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires}`);
+    const cookieDomain = '.ronagung.dev';
+    // Prefer SameSite=None + Domain when the request origin is the CMS domain
+    const origin = (res && res.req && res.req.headers && res.req.headers.origin) ? res.req.headers.origin : '';
+    const isCmsOrigin = origin.includes('cms.ronagung.dev');
+    const useCrossSite = process.env.NODE_ENV === 'production' || isCmsOrigin;
+    const cookie = useCrossSite
+        ? `${SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; Domain=${cookieDomain}; HttpOnly; Secure; SameSite=None; Partitioned; Expires=${expires}`
+        : `${SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires}`;
+    res.setHeader('Set-Cookie', cookie);
 }
 
 function clearSessionCookie(res) {
